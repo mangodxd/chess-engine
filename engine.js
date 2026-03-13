@@ -40,7 +40,6 @@ const betafishEngine = function() {
   ];
 
   //prettier-ignore
-  {
     var PIECES = { EMPTY: 0, wP: 1, wN: 2, wB: 3, wR: 4, wQ: 5, wK: 6, bP: 7, bN: 8, bB: 9, bR: 10, bQ: 11, bK: 12 };
     var BRD_SQ_NUM = 120;
     var FILES = {
@@ -67,7 +66,6 @@ const betafishEngine = function() {
 
     var FilesBrd = new Array(BRD_SQ_NUM);
     var RanksBrd = new Array(BRD_SQ_NUM);
-  }
 
   // Transposition Table Constants
   const TT_SIZE_MB = 16; // 16MB for the Transposition Table
@@ -197,11 +195,11 @@ const betafishEngine = function() {
 
   function init() {
     InitFilesRanksBrd();
-    InitSq120To64();
+    InitSq120To64(); // PHẢI CHẠY TRƯỚC để sq64to120 hoạt động
     InitHashKeys();
     InitBoardVars();
     InitMvvLva();
-    ParseFen(START_FEN);
+    ParseFen(START_FEN); // ParseFen gọi UpdateListsMaterial bên trong
   }
 
   /****************************\
@@ -496,21 +494,25 @@ const betafishEngine = function() {
   }
 
   function UpdateListsMaterial() {
-    var piece, sq, index, colour;
+  var piece, sq, index, colour;
 
-    for (index = 0; index < 14 * 10; ++index) GameBoard.pList[index] = PIECES.EMPTY;
-    for (index = 0; index < 2; ++index) GameBoard.material[index] = 0;
-    for (index = 0; index < 13; ++index) GameBoard.pceNum[index] = 0;
+  for (index = 0; index < 14 * 10; ++index) GameBoard.pList[index] = PIECES.EMPTY;
+  for (index = 0; index < 2; ++index) GameBoard.material[index] = 0;
+  for (index = 0; index < 13; ++index) GameBoard.pceNum[index] = 0;
 
-    if (piece !== undefined && piece !== PIECES.EMPTY && piece !== SQUARES.OFFBOARD) {
-            colour = PieceCol[piece]; 
-            if (colour !== undefined) {
-                GameBoard.material[colour] += PieceVal[piece];
-                GameBoard.pList[getPieceIndex(piece, GameBoard.pceNum[piece])] = sq;
-                GameBoard.pceNum[piece]++;
-            }
-        }
+  for (index = 0; index < 64; ++index) {
+    sq = sq64to120(index); 
+    piece = GameBoard.pieces[sq];
+
+    if (piece !== PIECES.EMPTY && piece !== SQUARES.OFFBOARD && typeof PieceCol !== 'undefined') {
+      colour = PieceCol[piece];
+      GameBoard.material[colour] += PieceVal[piece];
+      
+      GameBoard.pList[getPieceIndex(piece, GameBoard.pceNum[piece])] = sq;
+      GameBoard.pceNum[piece]++;
     }
+  }
+}
 
   function ResetBoard() {
     var index = 0;
